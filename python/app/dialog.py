@@ -95,6 +95,7 @@ class AppDialog(QtGui.QWidget):
 
     def _setup_ui(self):
         self.setWindowTitle('Create Output')
+        self.setFixedSize(465, 100)
 
         output_group = QtGui.QGroupBox('Create Output')
         

@@ -55,7 +55,7 @@ class FileDialogPanelApp(Application):
         # can launch the panel
         self.engine.register_command(
             "Cache Dialog...",
-            self.create_panel,
+            self.create_dialog,
             {
                 "type": "panel",
                 "short_name": "cachedialog_panel",
