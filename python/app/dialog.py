@@ -31,7 +31,7 @@ class AppDialog(QtGui.QWidget):
         # it is often handy to keep a reference to this. You can get it via the following method:
         self._app = sgtk.platform.current_bundle()
 
-        self._types = ['bgeo.sc', 'vdb', 'abc']
+        self._types = ['bgeo.sc', 'vdb', 'abc', 'obj']
 
         self._setup_ui()
 
@@ -49,8 +49,8 @@ class AppDialog(QtGui.QWidget):
             self.close()
 
     def _on_dialog_close(self, name, combo_text):
-        #Call back from the Updater Dialog
-        #Creates the actual nodes
+        # Call back from the Updater Dialog
+        # Creates the actual nodes
         node_select = hou.selectedNodes()
 
         if node_select:
@@ -58,16 +58,16 @@ class AppDialog(QtGui.QWidget):
 
             for node in node_select:
 
-                #Check if node is a sop node
+                # Check if node is a sop node
                 if node.type().category().name() != 'Sop':
                     break
-                #Check for name
+                # Check for name
                 if name == '':
                     node_name = node.name()
                 else:
                     node_name = name
 
-                #Create nodes
+                # Create nodes
                 null = node.createOutputNode('null', 'OUT_%s' % (node_name))
                 position = node.position()
                 null.setPosition(position)
@@ -81,10 +81,14 @@ class AppDialog(QtGui.QWidget):
 
                 outnode = out.createNode('sgtk_geometry', node_name)
 
-                #Set Parameters (use .name() to update to latest names of nodes in case houdini changed it)
+                # Set Parameters (use .name() to update to latest names of nodes in case houdini changed it)
                 rop_path = os.path.join(os.path.dirname(outnode.path()), outnode.name())
                 filenode.parm('rop').set(rop_path.replace(os.path.sep, '/'))
                 filenode.parm('rop').pressButton()
+                
+                # set type abc
+                if combo_text == 'abc':
+                    filenode.parm('isalembic').set(True)
 
                 null_path = os.path.join(os.path.dirname(null.path()), null.name())
                 outnode.parm('soppath').set(null_path.replace(os.path.sep, '/'))
@@ -99,18 +103,19 @@ class AppDialog(QtGui.QWidget):
 
         output_group = QtGui.QGroupBox('Create Output')
         
-        #Create layout
+        # Create layout
         type_layout = QtGui.QHBoxLayout()
 
         type_label = QtGui.QLabel('Type:')
 
-        #Add the different _types
+        # Add the different _types
         self._type_combo = QtGui.QComboBox()
         for out_type in self._types:
             self._type_combo.addItem(out_type)
         
         self._name_line = QtGui.QLineEdit()
         self._name_line.setPlaceholderText('Cache name')
+        self._name_line.returnPressed.connect(self._on_btn_press)
 
         cache_name = QtGui.QLabel('Cache name:')
 
@@ -119,11 +124,11 @@ class AppDialog(QtGui.QWidget):
         type_layout.addWidget(cache_name)
         type_layout.addWidget(self._name_line)
         
-        #Add layout
+        # Add layout
         changedgroup_layout = QtGui.QVBoxLayout(output_group)
         changedgroup_layout.addLayout(type_layout)
 
-        #Create _button
+        # Create _button
         self._button = QtGui.QPushButton('Create outputs')
         self._button.clicked.connect(self._on_btn_press)
         
