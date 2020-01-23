@@ -85,10 +85,6 @@ class AppDialog(QtGui.QWidget):
                 rop_path = os.path.join(os.path.dirname(outnode.path()), outnode.name())
                 filenode.parm('rop').set(rop_path.replace(os.path.sep, '/'))
                 filenode.parm('rop').pressButton()
-                
-                # set type abc
-                if combo_text == 'abc':
-                    filenode.parm('isalembic').set(True)
 
                 null_path = os.path.join(os.path.dirname(null.path()), null.name())
                 outnode.parm('soppath').set(null_path.replace(os.path.sep, '/'))
