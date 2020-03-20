@@ -57,10 +57,10 @@ class AppDialog(QtGui.QWidget):
             out = hou.node('/out')
 
             for node in node_select:
-
                 # Check if node is a sop node
                 if node.type().category().name() != 'Sop':
                     break
+                
                 # Check for name
                 if name == '':
                     node_name = node.name()
