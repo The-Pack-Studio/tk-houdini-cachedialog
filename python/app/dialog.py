@@ -42,7 +42,7 @@ class AppDialog(QtGui.QWidget):
         name = self._name_line.text()
         name = name.replace(' ', '_')
 
-        if name and not name.isdigit() and len(hou.selectedNodes()) != 0:
+        if not name.isdigit() and len(hou.selectedNodes()) != 0:
             current_combo = self._type_combo.currentText()
             
             self._on_dialog_close(name, current_combo)
