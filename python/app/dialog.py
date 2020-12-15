@@ -31,7 +31,7 @@ class AppDialog(QtGui.QWidget):
         # it is often handy to keep a reference to this. You can get it via the following method:
         self._app = sgtk.platform.current_bundle()
 
-        self._types = ['bgeo.sc', 'vdb', 'abc', 'obj']
+        self._types = ('bgeo.sc', 'vdb', 'abc', 'obj', 'usd', 'ass', 'ass.gz')
 
         self._setup_ui()
 
@@ -44,11 +44,14 @@ class AppDialog(QtGui.QWidget):
 
         if not name.isdigit() and len(hou.selectedNodes()) != 0:
             current_combo = self._type_combo.currentText()
+            sim_toggle = self._sim_toggle.isChecked()
+            version_toggle = self._version_toggle.isChecked()
+            publish_toggle = self._publish_toggle.isChecked()
             
-            self._on_dialog_close(name, current_combo)
+            self._on_dialog_close(name, current_combo, sim_toggle, version_toggle, publish_toggle)
             self.close()
 
-    def _on_dialog_close(self, name, combo_text):
+    def _on_dialog_close(self, name, combo_text, init_sim, auto_version, auto_publish):
         # Call back from the Updater Dialog
         # Creates the actual nodes
         node_select = hou.selectedNodes()
@@ -58,71 +61,80 @@ class AppDialog(QtGui.QWidget):
 
             for node in node_select:
                 # Check if node is a sop node
-                if node.type().category().name() != 'Sop':
-                    break
-                
-                # Check for name
-                if name == '':
-                    node_name = node.name()
-                else:
-                    node_name = name
+                if node.type().category().name() == 'Sop':
+                    # Check for name
+                    if name == '':
+                        node_name = node.name()
+                    else:
+                        node_name = name
 
-                # Create nodes
-                null = node.createOutputNode('null', 'OUT_%s' % (node_name))
-                position = node.position()
-                null.setPosition(position)
-                null.move([0, -1])
+                    # Create nodes
+                    null = node.createOutputNode('null', 'OUT_%s' % (node_name))
+                    null.setPosition(node.position())
+                    null.move([0, -1])
 
-                filenode = null.createOutputNode('sgtk_file', node_name)
-                position = null.position()
-                filenode.setPosition(position)
-                filenode.move([0, -1])
-                filenode.setColor(hou.Color(0.8, 0.1, 0.1))
+                    filenode = null.createOutputNode('sgtk_file', node_name)
+                    filenode.setPosition(null.position())
+                    filenode.move([0, -1])
+                    filenode.setColor(hou.Color(0.8, 0.1, 0.1))
 
-                outnode = out.createNode('sgtk_geometry', node_name)
+                    outnode = out.createNode('sgtk_geometry', node_name)
 
-                # Set Parameters (use .name() to update to latest names of nodes in case houdini changed it)
-                rop_path = os.path.join(os.path.dirname(outnode.path()), outnode.name())
-                filenode.parm('rop').set(rop_path.replace(os.path.sep, '/'))
-                filenode.parm('rop').pressButton()
+                    filenode.parm('rop').set(outnode.path())
+                    filenode.parm('rop').pressButton()
 
-                null_path = os.path.join(os.path.dirname(null.path()), null.name())
-                outnode.parm('soppath').set(null_path.replace(os.path.sep, '/'))
-                outnode.parm('types').set(combo_text)
+                    outnode.parm('soppath').set(null.path())
+                    outnode.parm('types').set(combo_text)
+
+                    outnode.parm('initsim').set(init_sim)
+                    outnode.parm('auto_ver').set(auto_version)
+                    outnode.parm('auto_pub').set(auto_publish)
 
     ###################################################################################################
     # Private Functions
 
     def _setup_ui(self):
         self.setWindowTitle('Create Output')
-        self.setFixedSize(465, 100)
+        self.setFixedSize(465, 125)
 
         output_group = QtGui.QGroupBox('Create Output')
         
-        # Create layout
+        # Name and type layout
         type_layout = QtGui.QHBoxLayout()
 
         type_label = QtGui.QLabel('Type:')
 
-        # Add the different _types
         self._type_combo = QtGui.QComboBox()
         for out_type in self._types:
             self._type_combo.addItem(out_type)
         
         self._name_line = QtGui.QLineEdit()
-        self._name_line.setPlaceholderText('Cache name')
+        self._name_line.setPlaceholderText('Cache Name')
         self._name_line.returnPressed.connect(self._on_btn_press)
 
-        cache_name = QtGui.QLabel('Cache name:')
+        cache_name = QtGui.QLabel('Cache Name:')
 
         type_layout.addWidget(type_label)
         type_layout.addWidget(self._type_combo)
         type_layout.addWidget(cache_name)
         type_layout.addWidget(self._name_line)
+
+        # toggles layout
+        toggle_layout = QtGui.QHBoxLayout()
+
+        self._sim_toggle = QtGui.QCheckBox('Simulation')
+        self._version_toggle = QtGui.QCheckBox('Auto Version')
+        self._version_toggle.setChecked(True)
+        self._publish_toggle = QtGui.QCheckBox('Auto Publish')
+       
+        toggle_layout.addWidget(self._sim_toggle)
+        toggle_layout.addWidget(self._version_toggle)
+        toggle_layout.addWidget(self._publish_toggle)
         
         # Add layout
         changedgroup_layout = QtGui.QVBoxLayout(output_group)
         changedgroup_layout.addLayout(type_layout)
+        changedgroup_layout.addLayout(toggle_layout)
 
         # Create _button
         self._button = QtGui.QPushButton('Create outputs')
@@ -132,14 +144,3 @@ class AppDialog(QtGui.QWidget):
         layout.addWidget(output_group)
         layout.addWidget(self._button)
         self.setLayout(layout)
-
-    ###################################################################################################
-    # navigation
-
-    def navigate_to_context(self, context):
-        """
-        Navigates to the given context.
-
-        :param context: The context to navigate to.
-        """
-        self._fill_treewidget()
