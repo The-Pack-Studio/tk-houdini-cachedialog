@@ -47,11 +47,12 @@ class AppDialog(QtGui.QWidget):
             sim_toggle = self._sim_toggle.isChecked()
             version_toggle = self._version_toggle.isChecked()
             publish_toggle = self._publish_toggle.isChecked()
+            frame_range = self._range_combo.currentIndex()
             
-            self._on_dialog_close(name, current_combo, sim_toggle, version_toggle, publish_toggle)
+            self._on_dialog_close(name, current_combo, sim_toggle, version_toggle, publish_toggle, frame_range)
             self.close()
 
-    def _on_dialog_close(self, name, combo_text, init_sim, auto_version, auto_publish):
+    def _on_dialog_close(self, name, combo_text, init_sim, auto_version, auto_publish, frame_range):
         # Call back from the Updater Dialog
         # Creates the actual nodes
         node_select = hou.selectedNodes()
@@ -89,6 +90,7 @@ class AppDialog(QtGui.QWidget):
                     outnode.parm('initsim').set(init_sim)
                     outnode.parm('auto_ver').set(auto_version)
                     outnode.parm('auto_pub').set(auto_publish)
+                    outnode.parm('trange').set(frame_range)
 
     ###################################################################################################
     # Private Functions
@@ -120,13 +122,25 @@ class AppDialog(QtGui.QWidget):
         type_layout.addWidget(self._name_line)
 
         # toggles layout
-        toggle_layout = QtGui.QHBoxLayout()
+        range_label = QtGui.QLabel('Range:')
+        
+        self._range_combo = QtGui.QComboBox()
+        self._range_combo.addItem('Single')
+        self._range_combo.addItem('Multiple')
+        self._range_combo.setCurrentIndex(1)
+
+        range_layout = QtGui.QHBoxLayout()
+        range_layout.addWidget(range_label)
+        range_layout.addWidget(self._range_combo)
 
         self._sim_toggle = QtGui.QCheckBox('Simulation')
         self._version_toggle = QtGui.QCheckBox('Auto Version')
         self._version_toggle.setChecked(True)
         self._publish_toggle = QtGui.QCheckBox('Auto Publish')
        
+        toggle_layout = QtGui.QHBoxLayout()
+
+        toggle_layout.addLayout(range_layout)
         toggle_layout.addWidget(self._sim_toggle)
         toggle_layout.addWidget(self._version_toggle)
         toggle_layout.addWidget(self._publish_toggle)
