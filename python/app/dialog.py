@@ -92,6 +92,9 @@ class AppDialog(QtGui.QWidget):
                     outnode.parm('auto_pub').set(auto_publish)
                     outnode.parm('trange').set(frame_range)
 
+                    # trigger refresh of path
+                    outnode.parm('types').pressButton()
+
     ###################################################################################################
     # Private Functions
 
