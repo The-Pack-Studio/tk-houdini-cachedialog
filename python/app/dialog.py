@@ -70,13 +70,9 @@ class AppDialog(QtGui.QWidget):
                         node_name = name
 
                     # Create nodes
-                    null = node.createOutputNode('null', 'OUT_%s' % (node_name))
-                    null.setPosition(node.position())
-                    null.move([0, -1])
-
-                    filenode = null.createOutputNode('sgtk_file', node_name)
-                    filenode.setPosition(null.position())
-                    filenode.move([0, -1])
+                    filenode = node.createOutputNode('sgtk_file', node_name)
+                    filenode.setPosition(node.position())
+                    filenode.moveToGoodPosition()
                     filenode.setColor(hou.Color(0.8, 0.1, 0.1))
 
                     outnode = out.createNode('sgtk_geometry', node_name)
@@ -84,7 +80,7 @@ class AppDialog(QtGui.QWidget):
                     filenode.parm('rop').set(outnode.path())
                     filenode.parm('rop').pressButton()
 
-                    outnode.parm('soppath').set(null.path())
+                    outnode.parm('soppath').set(filenode.path())
                     outnode.parm('types').set(combo_text)
 
                     outnode.parm('initsim').set(init_sim)
