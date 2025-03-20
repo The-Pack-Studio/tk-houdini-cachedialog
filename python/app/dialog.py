@@ -33,6 +33,12 @@ class AppDialog(QtGui.QWidget):
 
         self._types = ('bgeo.sc', 'vdb', 'abc', 'obj', 'usd', 'ass', 'ass.gz')
 
+        # Check first that the file is saved
+        if hou.hipFile.name() == "untitled.hip":
+            warning_msg = "Please save the Houdini scene before using the Cache Dialog app."
+            hou.ui.displayMessage(warning_msg, buttons=("OK",), severity=hou.severityType.Warning)
+            return None
+        
         self._setup_ui()
 
     ###################################################################################################
